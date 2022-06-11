@@ -1,3 +1,3 @@
-from playsound import playsound
-playsound("pipipip.mp3")
-
+import vlc
+p = vlc.MediaPlayer("pipipip.mp3")
+p.play()
