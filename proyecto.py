@@ -35,10 +35,10 @@ for file in files:
 INF = False
 
 #Recortar la imagen(%)
-Y_MIN = 0.5
+Y_MIN = 0.3
 Y_MAX = 1
-X_MIN = 0
-X_MAX = 1
+X_MIN = 0.15
+X_MAX = 0.85
 
 #Escalado
 X_PX = 320
@@ -134,12 +134,14 @@ def preproc(img):
 def segmentacion(img):
     segmented = label(img, connectivity= None)
     props = regionprops(segmented)
+    region1 = (segmented)*0
+    centroide = 160
     for prop in props:
         if prop.area > 10000 and prop.label != 0:
             region_label = prop.label
-            region = (segmented == region_label)*1
+            region1 = (segmented == region_label)*1
             centroide = prop.centroid
-    return region, centroide
+    return region1, centroide
 
 # Tipo de interseccion y esquinas
 def intersecciones2(region):
@@ -161,7 +163,7 @@ def intersecciones2(region):
     codo_l = l_path and (not r_path) and (not u_path)
     codo_r = (not l_path) and r_path and (not u_path)
     recto = (not l_path) and (not r_path) and u_path
-    intersecciones = [cruz, Te, i_l, i_r, codo_l, codo_r, recto]
+    intersecciones = [cruz, Te, i_l, i_r, codo_l, codo_r, recto,True]
     interseccion = intersecciones.index(True)
     return interseccion, empty_corners
 
@@ -242,13 +244,18 @@ def decision2(inst, interseccion, empty_corners):
         #Codo izq/der
         elif interseccion == 4 or interseccion == 5:
             print("Codo detectado \n Continue \n")
-            os.startfile("adelante.mp3")
+            #os.startfile("adelante.mp3")
             time.sleep(5)
         #Recto
         elif interseccion == 6:
             print("Continue \n")
+            #os.startfile("siga.mp3")
+        else: 
+            print("Continue \n")
+            #os.startfile("siga.mp3")
     else:
         print("Continue \n")
+        #os.startfile("siga.mp3")
     return giro
 
 def correccion(centroide):
@@ -256,7 +263,7 @@ def correccion(centroide):
     #Se determina la distancia en x del centroide al centro de la imagen y 
     #si el desvio es muy alto indica que se debe hacer una correccion
     desviacion = abs(x_c - 160)
-    if desviacion >= 20:
+    if desviacion >= 50:
         print("pip, pip, pip")
         os.startfile("pipipip.mp3")
 
@@ -270,18 +277,20 @@ for file in files:
     lista_fotos.append(foto)
 
 def main():
-    cam = cv2.VideoCapture(0)
-    instrucciones = ["l","l","r","r"]
+    cam = cv2.VideoCapture(1)
+    instrucciones = ["c","c","l"]
     i = 0
     while i < len(instrucciones):
         ret, frame = cam.read()
-        img_name = "IMG_ACTUAL.png"
+        img_name = "IMG_ACTUAL_{}.png".format(i)
         cv2.imwrite(img_name, frame)
         file_path_act = os.path.join(path, img_name)
         foto = io.imread(file_path_act)
         quant = preproc(foto)
-        region, centroide = segmentacion(quant)
-        intersec, esquinas = intersecciones2(region)
+        img_name2 = "IMG_QUANT_{}.png".format(i)
+        io.imsave(img_name2, quant)
+        region2, centroide = segmentacion(quant)
+        intersec, esquinas = intersecciones2(region2)
         if intersec == 6:
             correccion(centroide)
         giro = decision2(instrucciones[i], intersec, esquinas)

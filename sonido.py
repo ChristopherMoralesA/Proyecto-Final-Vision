@@ -1,3 +1,2 @@
-import vlc
-p = vlc.MediaPlayer("pipipip.mp3")
-p.play()
+import os
+os.startfile("adelante.mp3")
